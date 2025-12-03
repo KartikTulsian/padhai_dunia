@@ -2,21 +2,41 @@
 
 import * as Clerk from "@clerk/elements/common";
 import * as SignIn from "@clerk/elements/sign-in";
-import { useClerk } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function SignInPage() {
+  const { isSignedIn, user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
 
-  // Example function you can call if needed
+  useEffect(() => {
+    // Wait for user data to load
+    if (!isLoaded) return;
+
+    if (isSignedIn && user) {
+      // Try to get role from publicMetadata first, then unsafeMetadata
+      const role = 
+        (user.publicMetadata?.role as string) || 
+        (user.unsafeMetadata?.role as string);
+
+      if (role) {
+        // Navigate to role-specific dashboard
+        router.push(`/${role}`);
+      } else {
+        // No role assigned - sign out and show error
+        handleInvalidUser();
+      }
+    }
+  }, [isSignedIn, user, isLoaded, router]);
+
   const handleInvalidUser = async () => {
     await signOut();
-    toast.error("Invalid user. Please sign in with a valid account.");
-    router.replace("/sign-in");
+    toast.error("No role assigned. Please contact administrator.");
   };
 
   return (
@@ -48,7 +68,8 @@ export default function SignInPage() {
               </p>
             </div>
 
-            {/* Clerk form */}
+            <Clerk.GlobalError className="text-sm text-red-500" />
+
             <Clerk.Field name="identifier">
               <Clerk.Label className="block text-sm font-medium text-gray-700">
                 Email
@@ -83,9 +104,9 @@ export default function SignInPage() {
             </SignIn.Action>
 
             <div className="flex items-center my-6">
-              <div className="border-t border-gray-300"></div>
+              <div className="flex-1 border-t border-gray-300"></div>
               <span className="mx-2 text-gray-400 text-sm">or</span>
-              <div className="border-t border-gray-300"></div>
+              <div className="flex-1 border-t border-gray-300"></div>
             </div>
 
             <Clerk.Connection

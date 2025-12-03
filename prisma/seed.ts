@@ -23,7 +23,7 @@ async function main() {
       firstName: 'Super',
       lastName: 'Admin',
       phoneNumber: '+919876543210',
-      role: 'SUPER_ADMIN',
+      role: 'admin',
       status: 'ACTIVE',
       emailVerified: true,
       lastLogin: new Date(),
@@ -122,7 +122,7 @@ async function main() {
         firstName: 'Rajesh',
         lastName: 'Kumar',
         phoneNumber: '+919111111111',
-        role: 'INSTITUTE_ADMIN',
+        role: 'institute',
         status: 'ACTIVE',
         emailVerified: true,
         instituteAdmin: {
@@ -147,7 +147,7 @@ async function main() {
         firstName: 'Priya',
         lastName: 'Sharma',
         phoneNumber: '+919222222222',
-        role: 'INSTITUTE_ADMIN',
+        role: 'institute',
         status: 'ACTIVE',
         emailVerified: true,
         instituteAdmin: {
@@ -172,7 +172,7 @@ async function main() {
         firstName: 'Amit',
         lastName: 'Patel',
         phoneNumber: '+919333333333',
-        role: 'INSTITUTE_ADMIN',
+        role: 'institute',
         status: 'ACTIVE',
         emailVerified: true,
         instituteAdmin: {
@@ -207,7 +207,7 @@ async function main() {
         firstName: 'John',
         lastName: 'Doe',
         phoneNumber: '+919444444444',
-        role: 'TEACHER',
+        role: 'teacher',
         status: 'ACTIVE',
         emailVerified: true,
         teacherProfile: {
@@ -231,7 +231,7 @@ async function main() {
         firstName: 'Jane',
         lastName: 'Doe',
         phoneNumber: '+919555555555',
-        role: 'TEACHER',
+        role: 'teacher',
         status: 'ACTIVE',
         emailVerified: true,
         teacherProfile: {
@@ -256,7 +256,7 @@ async function main() {
         firstName: 'Ravi',
         lastName: 'Sharma',
         phoneNumber: '+919666666666',
-        role: 'TEACHER',
+        role: 'teacher',
         status: 'ACTIVE',
         emailVerified: true,
         teacherProfile: {
@@ -280,7 +280,7 @@ async function main() {
         firstName: 'Meera',
         lastName: 'Roy',
         phoneNumber: '+919777777777',
-        role: 'TEACHER',
+        role: 'teacher',
         status: 'ACTIVE',
         emailVerified: true,
         teacherProfile: {
@@ -305,7 +305,7 @@ async function main() {
         firstName: 'Platform',
         lastName: 'Teacher',
         phoneNumber: '+919888888888',
-        role: 'TEACHER',
+        role: 'teacher',
         status: 'ACTIVE',
         emailVerified: true,
         teacherProfile: {
@@ -395,7 +395,7 @@ async function main() {
         firstName: 'Cameron',
         lastName: 'Moran',
         phoneNumber: '+919000000001',
-        role: 'STUDENT',
+        role: 'student',
         status: 'ACTIVE',
         emailVerified: true,
         studentProfile: {
@@ -418,7 +418,7 @@ async function main() {
         firstName: 'Sofia',
         lastName: 'Patel',
         phoneNumber: '+919000000002',
-        role: 'STUDENT',
+        role: 'student',
         status: 'ACTIVE',
         emailVerified: true,
         studentProfile: {
@@ -442,7 +442,7 @@ async function main() {
         firstName: 'Riya',
         lastName: 'Sen',
         phoneNumber: '+919000000003',
-        role: 'STUDENT',
+        role: 'student',
         status: 'ACTIVE',
         emailVerified: true,
         studentProfile: {
@@ -465,7 +465,7 @@ async function main() {
         firstName: 'Amit',
         lastName: 'Das',
         phoneNumber: '+919000000004',
-        role: 'STUDENT',
+        role: 'student',
         status: 'ACTIVE',
         emailVerified: true,
         studentProfile: {
@@ -489,7 +489,7 @@ async function main() {
         firstName: 'Ipsita',
         lastName: 'Ghosh',
         phoneNumber: '+919000000005',
-        role: 'STUDENT',
+        role: 'student',
         status: 'ACTIVE',
         emailVerified: true,
         studentProfile: {

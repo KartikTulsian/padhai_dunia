@@ -19,8 +19,8 @@ const StudentForm = dynamic(() => import("./forms/StudentForm"), {
 const forms: {
   [key: string]: (type: "create" | "update" |"delete" |"view", data?: any) => JSX.Element;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />
+  // teacher: (type, data) => <TeacherForm type={type} data={data} />,
+  // student: (type, data) => <StudentForm type={type} data={data} />
 };
 
 const FormModal = ({
@@ -30,10 +30,11 @@ const FormModal = ({
   id,
 }: {
   table:
+    | "user"
     | "teacher"
     | "student"
     | "institute"
-    | "subject"
+    | "course"
     | "class"
     | "lesson"
     | "exam"
@@ -45,6 +46,7 @@ const FormModal = ({
   type: "create" | "update" | "delete" ;
   data?: any;
   id?: number | string;
+  relatedData?: any;
 }) => {
   const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
   const bgColor =

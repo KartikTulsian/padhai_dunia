@@ -213,7 +213,7 @@ export default async function SingleInstitutePage(props: { params: { id: string 
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex flex-col items-center sm:items-start sm:w-1/4">
               <Image
-                src={institute.logo || "/institute.png"}
+                src={institute.logo || "/avatar.png"}
                 alt={institute.name}
                 width={120}
                 height={120}
