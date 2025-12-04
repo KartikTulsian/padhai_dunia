@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import TableSearch from "@/components/TableSearch";
@@ -11,6 +8,7 @@ import { ITEM_PER_PAGE } from "@/lib/settings";
 import { auth } from "@clerk/nextjs/server";
 import Table from "@/components/Table";
 import CourseDetailsModal from "@/components/CourseDetailsModal";
+import Link from "next/link";
 
 type CourseList = Course & {
   enrollments: CourseEnrollment[];
@@ -40,9 +38,6 @@ export default async function SubjectListPage({
     { header: "Price", accessor: "price" },
   ];
 
-
-  const [expanded, setExpanded] = useState<number | null>(null);
-
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   const currentUserId = userId;
@@ -50,21 +45,24 @@ export default async function SubjectListPage({
   // Row renderer
   const renderRow = (item: CourseList) => {
     return (
-    <>
-      {/* MAIN ROW */}
       <tr
         key={item.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] cursor-pointer"
-        // onClick={() => toggleExpand(item.id)}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] transition-colors"
       >
-        <td className="p-4 font-medium">{item.title}</td>
-        <td>{item.code}</td>
-        <td>{item.type}</td>
-        <td>{item.institute?.name}</td>
-        <td>{item.level}</td>
+        <td className="p-4 font-medium">
+          <Link
+            href={`?courseId=${item.id}&page=${p}`}
+            className="w-full h-full block text-inherit hover:underline"
+          >
+            {item.title}
+          </Link>
+        </td>
+        <td className="hidden md:table-cell">{item.code}</td>
+        <td className="hidden md:table-cell">{item.type}</td>
+        <td className="hidden md:table-cell">{item.institute?.name}</td>
+        <td className="hidden md:table-cell">{item.level}</td>
         <td>{item.price}</td>
       </tr>
-    </>
     );
   };
 
@@ -173,10 +171,10 @@ export default async function SubjectListPage({
         <Pagination page={p} count={count} />
       </div>
 
-      {selectedCourse && selectedCourse.institute && (
+      {selectedCourse && (
         <CourseDetailsModal
           course={selectedCourse as CourseList & { institute: NonNullable<Institute> }}
-          onCloseUrl={`/list/course?page=${p}`}
+          onCloseUrl={`/list/courses?page=${p}`}
         />
       )}
     </div>

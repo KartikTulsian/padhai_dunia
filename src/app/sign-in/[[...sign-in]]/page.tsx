@@ -53,8 +53,8 @@ export default function SignInPage() {
           >
             <div className="text-center space-y-3">
               <Image
-                src="/karyasetu_main.png"
-                alt="KaryaSetu Logo"
+                src="/logo_main.png"
+                alt="Padhai Dunia Logo"
                 width={150}
                 height={90}
                 priority

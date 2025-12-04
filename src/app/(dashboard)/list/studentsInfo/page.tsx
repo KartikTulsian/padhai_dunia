@@ -9,6 +9,8 @@ import { Attendance, CourseEnrollment, Institute, Prisma, Student, StudentProgre
 import Table from "@/components/Table";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import FormContainer from "@/components/FormCotainer";
+import AppLink from "@/components/AppLink";
 
 type StudentList = Student & {
   user: User
@@ -111,13 +113,13 @@ export default async function InstituteStudentListPage({
         <td>
           <div className="flex items-center gap-3">
             {/* View/Details Button */}
-            <Link href={`/list/studentsInfo/${item.id}`}>
+            <AppLink href={`/list/studentsInfo/${item.id}`}>
               <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
 
                 <Image src="/view.png" alt="" width={16} height={16} />
 
               </button>
-            </Link>
+            </AppLink>
 
             {/* Delete Button (Admin only) */}
             {role === "admin" && (
@@ -192,7 +194,7 @@ export default async function InstituteStudentListPage({
 
           {/* Create Button (Admin only) */}
           {role === "admin" &&
-            <FormModal table="student" type="create" />
+            <FormContainer table="student" type="create" />
           }
         </div>
       </div>

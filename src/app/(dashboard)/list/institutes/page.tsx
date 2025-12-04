@@ -1,3 +1,5 @@
+import AppLink from "@/components/AppLink";
+import FormContainer from "@/components/FormCotainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -103,12 +105,12 @@ export default async function InstitutesListPage({
         <td>
           <div className="flex items-center gap-3">
             {/* View/Details Button (Styled with clean colors/icons) */}
-            <Link href={`/list/institutes/${item.id}`}>
+            <AppLink href={`/list/institutes/${item.id}`}>
               <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
                 <Image src="/view.png" alt="" width={16} height={16} />
               </button>
 
-            </Link>
+            </AppLink>
 
             {/* Delete Button (Admin only) */}
             {role === "admin" && (
@@ -183,7 +185,7 @@ export default async function InstitutesListPage({
 
           {/* Create Button (Admin only) */}
           {role === "admin" &&
-            <FormModal table="institute" type="create" />
+            <FormContainer table="institute" type="create" />
           }
         </div>
       </div>

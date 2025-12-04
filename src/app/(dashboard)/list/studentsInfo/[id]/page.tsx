@@ -133,7 +133,7 @@ export default async function SingleStudentPage(props: { params: { id: string } 
   const recentActivities = await prisma.dailyActivity.findMany({
     where: { studentId: student.id },
     orderBy: { date: 'desc' },
-    take: 30,
+    take: 150,
   });
 
   // Format student name

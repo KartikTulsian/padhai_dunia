@@ -1,6 +1,7 @@
-import { role } from "@/lib/data";
+import { currentUser } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
+import AppLink from "./AppLink";
 
 const menuItems = [
   {
@@ -9,7 +10,7 @@ const menuItems = [
       {
         icon: "/home.png",
         label: "Home",
-        href: "/admin",
+        href: "",
         visible: ["admin", "teacher", "student", "institute"],
       },
       {
@@ -24,12 +25,11 @@ const menuItems = [
         href: "/list/studentsInfo",
         visible: ["admin", "teacher", "institute"],
       },
-      
       {
-        icon:"/institutes.png",
+        icon: "/institutes.png",
         label: "Institute hub",
-        href:"/list/institutes",
-        visible:["admin"]
+        href: "/list/institutes",
+        visible: ["admin"],
       },
       {
         icon: "/subject.png",
@@ -67,24 +67,24 @@ const menuItems = [
         href: "/list/results",
         visible: ["admin", "teacher", "student", "institute"],
       },
-      {
-        icon: "/attendance.png",
-        label: "Attendance",
-        href: "/list/attendance",
-        visible: ["admin", "teacher", "student", "institute"],
-      },
+      // {
+      //   icon: "/attendance.png",
+      //   label: "Attendance",
+      //   href: "/list/attendance",
+      //   visible: ["admin", "teacher", "institute"],
+      // },
       {
         icon: "/calendar.png",
         label: "Events",
         href: "/list/events",
         visible: ["admin", "teacher", "student", "institute"],
       },
-      {
-        icon: "/message.png",
-        label: "Messages",
-        href: "/list/messages",
-        visible: ["admin", "teacher", "student", "institute"],
-      },
+      // {
+      //   icon: "/message.png",
+      //   label: "Messages",
+      //   href: "/list/messages",
+      //   visible: ["admin", "teacher", "institute"],
+      // },
       {
         icon: "/announcement.png",
         label: "Announcements",
@@ -93,52 +93,39 @@ const menuItems = [
       },
     ],
   },
-  // {
-  //   title: "OTHER",
-  //   items: [
-  //     {
-  //       icon: "/profile.png",
-  //       label: "Profile",
-  //       href: "/profile",
-  //       visible: ["admin", "teacher", "student", "parent"],
-  //     },
-  //     {
-  //       icon: "/setting.png",
-  //       label: "Settings",
-  //       href: "/settings",
-  //       visible: ["admin", "teacher", "student", "parent"],
-  //     },
-  //     {
-  //       icon: "/logout.png",
-  //       label: "Logout",
-  //       href: "/logout",
-  //       visible: ["admin", "teacher", "student", "parent"],
-  //     },
-  //   ],
-  // },
 ];
 
-const Menu = () => {
+const Menu = async () => {
+  const user = await currentUser();
+  const role = user?.publicMetadata.role as string;
+
   return (
-    <div className="mt-4 text-sm">
-      {menuItems.map((i) => (
-        <div className="flex flex-col gap-2" key={i.title}>
+    <div className="mt-1 text-sm">
+      {menuItems.map((section) => (
+        <div className="flex flex-col gap-2" key={section.title}>
           <span className="hidden lg:block text-gray-400 font-light my-4">
-            {i.title}
+            {section.title}
           </span>
-          {i.items.map((item) => {
-            if (item.visible.includes(role)) {
-              return (
-                <Link
-                  href={item.href}
-                  key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-[#EDF9FD]"
-                >
-                  <Image src={item.icon} alt="" width={20} height={20} />
-                  <span className="hidden lg:block">{item.label}</span>
-                </Link>
-              );
-            }
+
+          {section.items.map((item) => {
+            if (!role || !item.visible.includes(role)) return null;
+
+            // Dynamically route to role dashboard
+            const targetHref =
+              item.label === "Home"
+                ? `/${role}`  // <-- this correctly navigates to dashboard route
+                : item.href;
+
+            return (
+              <AppLink
+                href={targetHref}
+                key={item.label}
+                className="flex items-center justify-center lg:justify-start gap-4 text-gray-500 py-2 md:px-2 rounded-md hover:bg-[#EDF9FD]"
+              >
+                <Image src={item.icon} alt="" width={20} height={20} />
+                <span className="hidden lg:block">{item.label}</span>
+              </AppLink>
+            );
           })}
         </div>
       ))}

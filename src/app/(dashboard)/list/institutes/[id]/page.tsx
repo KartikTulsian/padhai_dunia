@@ -342,7 +342,7 @@ export default async function SingleInstitutePage(props: { params: { id: string 
         </div>
 
         {/* === 4. GITHUB-STYLE ACTIVITY CHART === */}
-        <ActivityHeatmap
+        {/* <ActivityHeatmap
           data={activityData.map(item => ({
             date: new Date(item.date),
             count: item.count
@@ -350,7 +350,7 @@ export default async function SingleInstitutePage(props: { params: { id: string 
           title="Student Registrations"
           subtitle={`${dailyRegistrations.length} registrations in the last year`}
           colorScheme="green"
-        />
+        /> */}
 
         {/* === 5. ADMINS & TEACHERS === */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

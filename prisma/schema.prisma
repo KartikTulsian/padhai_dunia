@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -901,7 +900,7 @@ model Announcement {
   classId     String?
   class       Class?             @relation(fields: [classId], references: [id], onDelete: SetNull)
 
-  isPinned    Boolean   @default(false)
+  // isPinned    Boolean   @default(false)
   publishedAt DateTime  @default(now())
   expiresAt   DateTime?
 

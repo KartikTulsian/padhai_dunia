@@ -1,8 +1,8 @@
 import React from 'react'
 import Image from 'next/image';
-import { Assignment, ClassCourse, Course, CourseEnrollment, CourseModule, CourseReview, CourseTeacher, Exam, Institute, Prisma, Quiz, StudyMaterial } from "@prisma/client";
+import Link from 'next/link';
+import { Assignment, ClassCourse, Course, CourseEnrollment, CourseModule, CourseReview, CourseTeacher, Exam, Institute, Quiz, StudyMaterial } from "@prisma/client";
 import { auth } from '@clerk/nextjs/server';
-import { role } from '@/lib/data';
 import FormContainer from './FormCotainer';
 
 type CourseWithRelations = Course & {
@@ -25,28 +25,32 @@ export default async function CourseDetailsModal({
   course: CourseWithRelations;
   onCloseUrl: string;
 }) {
-  const { userId } = await auth();
-  const isAdmin = role === "admin" || role === "INSTITUTE_ADMIN";
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const isAdmin = role === "admin";
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh] animate-scaleIn">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh] animate-fadeIn">
         
         {/* HEADER */}
-        <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 p-6 flex items-center gap-4">
-          <Image
-            src={course.thumbnail || "/avatar.png"}
-            alt={course.title}
-            width={80}
-            height={80}
-            className="rounded-full object-cover border-4 border-white shadow-xl"
-          />
+        <div className="relative bg-linear-to-r from-indigo-600 to-purple-600 p-6">
+          <div className="flex items-center gap-4">
+            <Image
+              src={course.thumbnail || "/course.png"}
+              alt={course.title}
+              width={80}
+              height={80}
+              className="rounded-full object-cover border-4 border-white shadow-xl"
+            />
 
-          <div className="flex justify-between w-full items-center">
-            <div>
+            <div className="flex-1">
               <h2 className="text-3xl font-bold text-white">{course.title}</h2>
               <p className="text-white/80 text-sm mt-1">
-                Offered by <strong>{course.institute?.name}</strong>
+                Offered by <strong>{course.institute?.name || "Unknown Institute"}</strong>
+              </p>
+              <p className="text-white/70 text-xs mt-1">
+                Code: {course.code}
               </p>
             </div>
 
@@ -58,60 +62,112 @@ export default async function CourseDetailsModal({
             )}
           </div>
 
-          <a
+          <Link
             href={onCloseUrl}
-            className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+            className="absolute top-4 right-4 text-white/80 hover:text-white text-2xl font-bold transition-colors"
           >
             ✕
-          </a>
+          </Link>
         </div>
 
         {/* BODY */}
         <div className="p-6 space-y-6">
-          <p className="text-gray-700 leading-relaxed">{course.description}</p>
+          {/* DESCRIPTION */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Description</h3>
+            <p className="text-gray-700 leading-relaxed">
+              {course.description || "No description available"}
+            </p>
+          </div>
 
           {/* COURSE DETAILS GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            {[
-              { label: "Course Type", value: course.type },
-              { label: "Level", value: course.level },
-              { label: "Price", value: `${course.price} ${course.currency}` },
-              { label: "Duration", value: `${course.duration} hrs` },
-              { label: "Language", value: course.language },
-              { label: "Category", value: course.category },
-              { label: "Tags", value: course.tags?.join(", ") },
-              { label: "Prerequisites", value: course.prerequisites?.join(", ") },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
-                <Image src="/info.png" alt="" width={22} height={22} />
-                <span>
-                  <strong>{item.label}:</strong> {item.value ?? "N/A"}
-                </span>
-              </div>
-            ))}
-
-            {isAdmin && (
-              <>
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
-                  <Image src="/status.png" alt="" width={22} height={22} />
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">Course Details</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              {[
+                { label: "Course Type", value: course.type, icon: "/course.png" },
+                { label: "Level", value: course.level, icon: "/volume-control.png" },
+                { label: "Price", value: course.price ? `${course.currency || "$"}${course.price}` : "Free", icon: "/money-back.png" },
+                { label: "Duration", value: course.duration ? `${course.duration} hrs` : "N/A", icon: "/hourglass.png" },
+                { label: "Language", value: course.language, icon: "/earth.png" },
+                { label: "Category", value: course.category, icon: "/category.png" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
+                  <Image src={item.icon} alt="" width={20} height={20} />
                   <span>
-                    <strong>Status:</strong> {course.status}
+                    <strong className="text-gray-700">{item.label}:</strong>{" "}
+                    <span className="text-gray-600">{item.value || "N/A"}</span>
                   </span>
                 </div>
+              ))}
 
-                <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
-                  <Image src="/visibility.png" alt="" width={22} height={22} />
+              {course.tags && course.tags.length > 0 && (
+                <div className="col-span-full flex items-start gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
+                  <Image src="/info.png" alt="" width={20} height={20} />
                   <span>
-                    <strong>Public:</strong> {course.isPublic ? "Yes" : "No"}
+                    <strong className="text-gray-700">Tags:</strong>{" "}
+                    <span className="text-gray-600">{course.tags.join(", ")}</span>
                   </span>
                 </div>
-              </>
-            )}
+              )}
+
+              {course.prerequisites && course.prerequisites.length > 0 && (
+                <div className="col-span-full flex items-start gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
+                  <Image src="/info.png" alt="" width={20} height={20} />
+                  <span>
+                    <strong className="text-gray-700">Prerequisites:</strong>{" "}
+                    <span className="text-gray-600">{course.prerequisites.join(", ")}</span>
+                  </span>
+                </div>
+              )}
+
+              {isAdmin && (
+                <>
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
+                    <Image src="/info.png" alt="" width={20} height={20} />
+                    <span>
+                      <strong className="text-gray-700">Status:</strong>{" "}
+                      <span className={`font-medium ${
+                        course.status === "PUBLISHED" ? "text-green-600" : "text-yellow-600"
+                      }`}>
+                        {course.status}
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-gray-50 p-3 rounded-lg shadow-sm">
+                    <Image src="/info.png" alt="" width={20} height={20} />
+                    <span>
+                      <strong className="text-gray-700">Public:</strong>{" "}
+                      <span className="text-gray-600">{course.isPublic ? "Yes" : "No"}</span>
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* STATISTICS */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-blue-600">{course.enrollments?.length || 0}</p>
+              <p className="text-sm text-gray-600">Enrollments</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-green-600">{course.modules?.length || 0}</p>
+              <p className="text-sm text-gray-600">Modules</p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg text-center">
+              <p className="text-2xl font-bold text-purple-600">{course.teachers?.length || 0}</p>
+              <p className="text-sm text-gray-600">Teachers</p>
+            </div>
           </div>
 
           {/* RELATIONAL DETAILS FOR ADMINS */}
           {isAdmin && (
-            <>
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-gray-800">Additional Details</h3>
+              
               {[
                 { label: "Teachers", items: course.teachers, key: "teacher" },
                 { label: "Modules", items: course.modules },
@@ -119,29 +175,41 @@ export default async function CourseDetailsModal({
                 { label: "Exams", items: course.exams },
                 { label: "Quizzes", items: course.quizzes },
                 { label: "Resources", items: course.resources },
-                { label: "Enrollments", items: course.enrollments },
                 { label: "Classes", items: course.classes },
                 { label: "Reviews", items: course.reviews },
               ].map((section, i) => (
                 <details key={i} className="bg-gray-100 rounded-xl p-4 shadow-sm">
-                  <summary className="cursor-pointer font-semibold text-gray-800 text-lg flex justify-between">
-                    {section.label} <span>({section.items?.length})</span>
+                  <summary className="cursor-pointer font-semibold text-gray-800 flex justify-between items-center">
+                    <span>{section.label}</span>
+                    <span className="text-sm bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">
+                      {section.items?.length || 0}
+                    </span>
                   </summary>
-                  <div className="mt-3 space-y-1 text-sm pl-2">
-                    {section.items?.length > 0 ? (
+                  <div className="mt-3 space-y-2 text-sm pl-2">
+                    {section.items && section.items.length > 0 ? (
                       section.items.map((item: any, idx: number) => (
-                        <p key={idx} className="border-b pb-1 text-gray-600">
-                          {item.title || item.name || item.teacher?.name || "Unnamed Item"}
-                        </p>
+                        <div key={idx} className="border-b pb-2 text-gray-600 last:border-0">
+                          {item.title || item.name || item.teacher?.name || `Item #${idx + 1}`}
+                        </div>
                       ))
                     ) : (
-                      <p className="text-gray-500">No data available</p>
+                      <p className="text-gray-500 italic">No data available</p>
                     )}
                   </div>
                 </details>
               ))}
-            </>
+            </div>
           )}
+        </div>
+
+        {/* FOOTER */}
+        <div className="p-6 bg-gray-50 border-t flex justify-end">
+          <Link
+            href={onCloseUrl}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+          >
+            Close
+          </Link>
         </div>
       </div>
     </div>

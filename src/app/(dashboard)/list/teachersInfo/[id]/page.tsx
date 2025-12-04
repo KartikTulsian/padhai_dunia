@@ -136,56 +136,59 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
   // Aggregate counts by date
   const activityCountsByDate: Record<string, number> = {};
   const allActivities = [
-    ...lessonsCreated, 
-    ...assignmentsCreated, 
-    ...examsCreated, 
+    ...lessonsCreated,
+    ...assignmentsCreated,
+    ...examsCreated,
     ...quizzesCreated
   ];
 
   allActivities.forEach(activity => {
-    // Use local date string to avoid timezone issues
-    const dateKey = activity.createdAt.toLocaleDateString('sv-SE'); // YYYY-MM-DD format
+    // FIX: Use consistent date formatting
+    const d = activity.createdAt;
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     activityCountsByDate[dateKey] = (activityCountsByDate[dateKey] || 0) + 1;
   });
 
   // Convert to the format needed by ActivityHeatmap component
+  // CRITICAL: Pass Date objects, not strings
   const teacherActivityData = Object.entries(activityCountsByDate).map(([dateStr, count]) => ({
-    date: new Date(dateStr), // Convert back to Date object
-    count: count,
+    date: new Date(dateStr + 'T00:00:00'), // Add time to prevent timezone shifts
+    count,
   }));
+
 
   // Format teacher name
   const fullName = `${teacher.user.firstName} ${teacher.user.lastName}`;
-  
+
   // Format join date
   const joinDate = new Intl.DateTimeFormat("en-GB").format(teacher.joinDate);
-  
+
   // Format last login
-  const lastLogin = teacher.user.lastLogin 
-    ? new Intl.DateTimeFormat("en-GB", { 
-        dateStyle: "medium", 
-        timeStyle: "short" 
-      }).format(teacher.user.lastLogin)
+  const lastLogin = teacher.user.lastLogin
+    ? new Intl.DateTimeFormat("en-GB", {
+      dateStyle: "medium",
+      timeStyle: "short"
+    }).format(teacher.user.lastLogin)
     : "Never";
 
   const IconSpan = ({ children, className = "text-blue-500" }: { children: React.ReactNode, className?: string }) => (
     <span className={`w-5 h-5 flex items-center justify-center ${className}`}>
-        {children}
+      {children}
     </span>
   );
 
   return (
     <div className="flex-1 p-4 md:p-6 lg:p-8 flex flex-col gap-6 xl:flex-row bg-gray-50 min-h-screen">
-      
+
       {/* LEFT COLUMN (WIDER CONTENT) */}
       <div className="w-full xl:w-2/3 flex flex-col gap-6">
-        
+
         {/* === 1. TOP SECTION: USER INFO & STAT CARDS === */}
         <div className="flex flex-col lg:flex-row gap-6">
-          
+
           {/* A. USER INFO CARD (Prominent and Clean) */}
           <div className="bg-white p-6 rounded-xl shadow-2xl flex-1 flex flex-col sm:flex-row gap-6 border-l-8 border-indigo-500/80 transition-shadow hover:shadow-indigo-300">
-            
+
             <div className="flex flex-col items-center sm:items-start sm:w-1/3">
               <Image
                 src={teacher.user.avatar || "/avatar.png"}
@@ -195,7 +198,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
                 className="w-32 h-32 rounded-full object-cover ring-4 ring-indigo-200 shadow-md"
               />
             </div>
-            
+
             <div className="flex flex-col justify-between gap-4 sm:w-2/3">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
@@ -209,24 +212,24 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
                   {teacher.bio || "No biography available. Use the edit feature to add a brief professional introduction."}
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-y-3 text-sm font-medium text-gray-700 mt-3 border-t border-gray-100 pt-3">
-                
+
                 <div className="flex items-center gap-1">
                   <IconSpan>📅</IconSpan>
                   <span title="Joined Date">{joinDate}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <IconSpan>📧</IconSpan>
                   <span className="truncate" title={teacher.user.email}>{teacher.user.email}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <IconSpan>📞</IconSpan>
                   <span>{teacher.user.phoneNumber || "N/A"}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <IconSpan className={teacher.user.status === 'ACTIVE' ? 'text-green-500' : 'text-red-500'}>🟢</IconSpan>
                   <span className={`font-semibold ${teacher.user.status === 'ACTIVE' ? 'text-green-600' : 'text-red-600'}`}>
@@ -240,7 +243,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
 
           {/* B. SMALL STAT CARDS (Data Visualization Focus) */}
           <div className="grid grid-cols-2 gap-4 lg:w-2/5">
-            
+
             {/* CARD - Total Students */}
             <div className="bg-white p-5 rounded-xl shadow-md border-b-4 border-blue-500 flex flex-col justify-between transition-transform hover:scale-[1.02]">
               <IconSpan className="text-blue-500">🧑‍🎓</IconSpan>
@@ -275,7 +278,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">Professional Details</h1>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            
+
             {/* Field: Teacher ID */}
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1"><IconSpan className="w-3 h-3 text-gray-400">#</IconSpan> Teacher ID</span>
@@ -287,7 +290,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
               <span className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1"><IconSpan className="w-3 h-3 text-gray-400">🏛️</IconSpan> Institute</span>
               <span className="text-sm font-medium text-gray-800">{teacher.institute?.name || "Platform Teacher"}</span>
             </div>
-            
+
             {/* Field: Specialization */}
             <div className="flex flex-col">
               <span className="text-xs font-semibold text-gray-500 uppercase flex items-center gap-1"><IconSpan className="w-3 h-3 text-gray-400">✨</IconSpan> Specialization</span>
@@ -301,7 +304,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
                 {teacher.isVerified ? "Verified" : "Pending"}
               </span>
             </div>
-            
+
             {/* Field: Subjects */}
             <div className="flex flex-col col-span-2 md:col-span-3 mt-4">
               <span className="text-xs font-semibold text-gray-500 uppercase mb-2 flex items-center gap-1"><IconSpan className="w-3 h-3 text-gray-400">📖</IconSpan> Subjects Taught</span>
@@ -322,10 +325,10 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
             </div>
           </div>
         </div>
-        
+
         {/* === 3. CLASSES & COURSES LISTS === */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* Classes List */}
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h1 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">Teaching Classes ({teacher._count.classes})</h1>
@@ -350,7 +353,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
                   </div>
                 ))}
                 {teacher._count.classes > 5 && (
-                  <Link 
+                  <Link
                     href={`/list/classes?teacherId=${teacher.id}`}
                     className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline mt-4 block"
                   >
@@ -385,7 +388,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
                   </div>
                 ))}
                 {teacher._count.courses > 5 && (
-                  <Link 
+                  <Link
                     href={`/list/courses?teacherId=${teacher.id}`}
                     className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline mt-4 block"
                   >
@@ -403,28 +406,28 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h1 className="text-xl font-bold text-gray-800 mb-4 border-b border-gray-100 pb-3">Content Contribution</h1>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            
+
             {/* Stat Card: Assignments */}
             <div className="text-center p-4 bg-blue-50 rounded-lg shadow-inner border border-blue-200 transition-transform hover:bg-blue-100">
               <IconSpan className="text-blue-600 mx-auto text-3xl mb-1">✍️</IconSpan>
               <p className="text-3xl font-extrabold text-blue-800">{teacher._count.assignments}</p>
               <p className="text-sm text-gray-600">Assignments</p>
             </div>
-            
+
             {/* Stat Card: Exams */}
             <div className="text-center p-4 bg-green-50 rounded-lg shadow-inner border border-green-200 transition-transform hover:bg-green-100">
               <IconSpan className="text-green-600 mx-auto text-3xl mb-1">📝</IconSpan>
               <p className="text-3xl font-extrabold text-green-800">{teacher._count.exams}</p>
               <p className="text-sm text-gray-600">Exams</p>
             </div>
-            
+
             {/* Stat Card: Quizzes */}
             <div className="text-center p-4 bg-purple-50 rounded-lg shadow-inner border border-purple-200 transition-transform hover:bg-purple-100">
               <IconSpan className="text-purple-600 mx-auto text-3xl mb-1">❓</IconSpan>
               <p className="text-3xl font-extrabold text-purple-800">{teacher._count.quizzes}</p>
               <p className="text-sm text-gray-600">Quizzes</p>
             </div>
-            
+
             {/* Stat Card: Lessons */}
             <div className="text-center p-4 bg-orange-50 rounded-lg shadow-inner border border-orange-200 transition-transform hover:bg-orange-100">
               <IconSpan className="text-orange-600 mx-auto text-3xl mb-1">💡</IconSpan>
@@ -435,14 +438,14 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
         </div>
 
         {/* --- 5. TEACHER ACTIVITY HEATMAP --- */}
-        <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+        {/* <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
           <ActivityHeatmap
-            data={teacherActivityData} 
+            data={teacherActivityData}
             title="Content Creation Activity"
             subtitle="Heatmap of lessons, assignments, exams, and quizzes created over the past year."
             colorScheme="orange" // Or choose another scheme like 'blue'
           />
-        </div>
+        </div> */}
 
         {/* === 5. SCHEDULE CALENDAR === */}
         <div className="bg-white rounded-xl shadow-lg p-6 h-[800px] mb-6">
@@ -453,7 +456,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
 
       {/* RIGHT COLUMN (NARROW SIDEBAR) */}
       <div className="w-full xl:w-1/3 flex flex-col gap-6">
-        
+
         {/* QUICK ACTIONS */}
         <div className="bg-white p-6 rounded-xl shadow-lg">
           <h1 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h1>
@@ -467,7 +470,7 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
               { label: "Assignments", href: `/list/assignments?teacherId=${teacher.id}`, bgColor: "bg-blue-50", textColor: "text-blue-700" },
               { label: "Courses", href: `/list/courses?teacherId=${teacher.id}`, bgColor: "bg-teal-50", textColor: "text-teal-700" },
             ].map((item, index) => (
-              <Link 
+              <Link
                 key={index}
                 className={`p-3 rounded-lg ${item.bgColor} ${item.textColor} font-semibold transition hover:opacity-80 shadow-sm`}
                 href={item.href}

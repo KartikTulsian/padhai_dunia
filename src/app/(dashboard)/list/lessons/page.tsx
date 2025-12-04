@@ -1,147 +1,156 @@
-"use client";
-
-import { useState } from "react";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { lessonsData, role, loggedInUser } from "@/lib/data";
 import Image from "next/image";
+import { Course, CourseModule, Lesson, LessonProgress, Prisma, Student, Teacher, User } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import LessonsDetailsModal from "@/components/LessonsDetailsModal";
+import Link from "next/link";
 
-type LessonHistory = {
-  id: number;
-  date: string;
-  topic: string;
-  progress: string;
-  class: string;
+type LessonList = Lesson & {
+  module: CourseModule & { course: Course };
+    teacher: Teacher & { user: User };
+    progress: (LessonProgress & { student: Student & { user: User } })[];
 };
 
-type Lesson = {
-  id: number;
-  teacherId: string;
-  teacher: string;
-  courses: string[];
-  currentLesson: string;
-  history: LessonHistory[];
-};
 
-const columns = [
-  { header: "Teacher Name", accessor: "teacher" },
-  { header: "Teacher ID", accessor: "teacherId" },
-  { header: "Assigned Courses", accessor: "courses" },
-  { header: "Current Lesson", accessor: "currentLesson" },
-  { header: "Actions", accessor: "actions" },
-];
+export default async function LessonsListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
 
-const LessonListPage = () => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const columns = [
+    { header: "Lesson Title", accessor: "title" },
+    { header: "Teacher", accessor: "teacher", className: "hidden md:table-cell" },
+    { header: "Course", accessor: "course", className: "hidden md:table-cell" },
+    { header: "Module", accessor: "module", className: "hidden md:table-cell" },
+    { header: "Type", accessor: "type", className: "hidden md:table-cell" },
+    { header: "Actions", accessor: "actions" },
+  ];
 
-  let filteredLessons = lessonsData as Lesson[];
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const teacherId = (sessionClaims?.metadata as { teacherId?: string })?.teacherId;
 
-  // Role-based filtering
-  if (role === "teacher") {
-    filteredLessons = lessonsData.filter(
-      (l) => l.teacher === loggedInUser.name
-    );
+  const { page, lessonId, ...queryParams } = await searchParams;
+  const p = page ? parseInt(page) : 1;
+
+  const query: Prisma.LessonWhereInput = {};
+
+  if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value) {
+        switch (key) {
+          case "search":
+            query.OR = [
+              { title: { contains: value, mode: "insensitive" } },
+              { description: { contains: value, mode: "insensitive" } },
+            ];
+            break;
+        }
+      }
+    }
   }
 
-  const toggleExpand = (id: number) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  // Role-based filtering
+  if (role === "teacher" && teacherId) {
+    query.teacherId = teacherId;
+  }
 
-  const renderRow = (item: Lesson) => {
-    const isExpanded = expandedId === item.id;
+  const [data, count] = await prisma.$transaction([
+    prisma.lesson.findMany({
+      where: query,
+      include: {
+        module: { include: { course: true } },
+        teacher: { include: { user: true } },
+        progress: { include: { student: { include: { user: true } } } },
+      },
+      take: ITEM_PER_PAGE,
+      skip: (p - 1) * ITEM_PER_PAGE,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.lesson.count({ where: query }),
+  ]) as [LessonList[], number];
 
-    return (
-      <>
-        <tr
-          key={item.id}
-          onClick={() => toggleExpand(item.id)}
-          className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] cursor-pointer"
-        >
-          <td className="p-4">{item.teacher}</td>
-          <td>{item.teacherId}</td>
-          <td>{item.courses.join(", ")}</td>
-          <td>{item.currentLesson}</td>
-          <td>
-            <div className="flex items-center gap-2">
-              {role === "teacher" && (
-                <FormModal table="lesson" type="update" data={item} />
-              )}
-              {role === "admin" && (
-                <>
-                  <FormModal table="lesson" type="update" data={item} />
-                  <FormModal table="lesson" type="delete" id={item.id} />
-                </>
-              )}
-            </div>
-          </td>
-        </tr>
+  const selectedLesson = lessonId
+    ? await prisma.lesson.findUnique({
+        where: { id: lessonId },
+        include: {
+          module: { include: { course: true } },
+          teacher: { include: { user: true } },
+          progress: { include: { student: { include: { user: true } } } },
+        },
+      })
+    : null;
 
-        {/* Expanded view - Lesson history (1 month) */}
-        {isExpanded && (
-          <tr className="bg-slate-50 text-sm">
-            <td colSpan={columns.length}>
-              <div className="p-4">
-                <h3 className="font-semibold mb-2">
-                  Lesson History (Last 1 Month) for {item.teacher}
-                </h3>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#CFCEFF] text-white">
-                      <th className="p-2 text-left">Date</th>
-                      <th className="p-2 text-left">Class</th>
-                      <th className="p-2 text-left">Topic</th>
-                      <th className="p-2 text-left">Progress</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {item.history.map((record) => (
-                      <tr key={record.id} className="border-b">
-                        <td className="p-2">{record.date}</td>
-                        <td className="p-2">{record.class}</td>
-                        <td className="p-2">{record.topic}</td>
-                        <td className="p-2">{record.progress}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </td>
-          </tr>
+  const renderRow = (item: LessonList) => (
+    <tr
+      key={item.id}
+      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] cursor-pointer transition-colors"
+    >
+      <td className="p-4 font-medium">
+        <Link href={`?lessonId=${item.id}&page=${p}`} scroll={false} className="hover:underline">
+          {item.title}
+        </Link>
+      </td>
+      <td className="hidden md:table-cell">
+        {item.teacher?.user?.firstName} {item.teacher?.user?.lastName}
+      </td>
+      <td className="hidden md:table-cell">{item.module.course.title}</td>
+      <td className="hidden md:table-cell">{item.module.title}</td>
+      <td className="hidden md:table-cell">{item.type}</td>
+      <td>
+        {(role === "admin" || role === "teacher") && (
+          <div className="flex items-center gap-2">
+            <FormModal table="lesson" type="update" data={item} />
+            {role === "admin" && <FormModal table="lesson" type="delete" id={item.id} />}
+          </div>
         )}
-      </>
-    );
-  };
+      </td>
+    </tr>
+  );
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">
-          {role === "teacher" ? "My Lessons" : "All Lessons Overview"}
-        </h1>
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+      {/* HEADER */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-lg font-semibold">Lessons Overview</h1>
+
+        <div className="flex items-center gap-4">
           <TableSearch />
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
-            {role === "admin" && <FormModal table="lesson" type="create" />}
-          </div>
+
+          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
+            <Image src="/filter.png" alt="" width={14} height={14} />
+          </button>
+          <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
+            <Image src="/sort.png" alt="" width={14} height={14} />
+          </button>
+
+          {(role === "admin" || role === "teacher") && (
+            <FormModal table="lesson" type="create" />
+          )}
         </div>
       </div>
 
       {/* TABLE */}
-      <Table columns={columns} renderRow={renderRow} data={filteredLessons} />
+      <Table columns={columns} renderRow={renderRow} data={data} />
 
       {/* PAGINATION */}
-      <Pagination />
+      <div className="mt-6">
+        <Pagination page={p} count={count} />
+      </div>
+
+      {selectedLesson && (
+        <LessonsDetailsModal
+          details={selectedLesson as any}
+          onCloseUrl={`/list/lessons?page=${p}`}
+          role={role}
+        />
+      )}
     </div>
   );
-};
-
-export default LessonListPage;
+}

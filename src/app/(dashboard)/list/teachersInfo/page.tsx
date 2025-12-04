@@ -1,3 +1,4 @@
+import AppLink from "@/components/AppLink";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -107,7 +108,7 @@ export default async function TeacherListPage({
         <td>
           <div className="flex items-center gap-3">
             {/* View/Details Button (Styled with clean colors/icons) */}
-            <Link href={`/list/teachersInfo/${item.id}`}>
+            <AppLink href={`/list/teachersInfo/${item.id}`}>
 
               <button className="w-7 h-7 flex items-center justify-center rounded-full bg-[#C3EBFA]">
 
@@ -115,7 +116,7 @@ export default async function TeacherListPage({
 
               </button>
 
-            </Link>
+            </AppLink>
 
             {/* Delete Button (Admin only) */}
             {role === "admin" && (

@@ -1050,7 +1050,6 @@ async function main() {
         target: 'SPECIFIC_CLASS',
         instituteId: institutes[0].id,
         classId: classes[0].id,
-        isPinned: true,
       },
     }),
     prisma.announcement.create({
@@ -1060,7 +1059,6 @@ async function main() {
         target: 'SPECIFIC_CLASS',
         instituteId: institutes[0].id,
         classId: classes[1].id,
-        isPinned: false,
       },
     }),
     prisma.announcement.create({
@@ -1068,7 +1066,6 @@ async function main() {
         title: 'Platform Maintenance',
         content: 'The platform will undergo maintenance on Sunday',
         target: 'PLATFORM_WIDE',
-        isPinned: true,
       },
     }),
   ]);

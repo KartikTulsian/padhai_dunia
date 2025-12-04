@@ -24,8 +24,8 @@ export default function SignUpPage() {
           >
             <div className="text-center space-y-2">
               <Image
-                src="/karyasetu_main.png"
-                alt="KaryaSetu Logo"
+                src="/logo_main.png"
+                alt="Padhai Dunia Logo"
                 width={150}
                 height={90}
                 priority
@@ -35,7 +35,7 @@ export default function SignUpPage() {
                 Create Account
               </h1>
               <p className="text-gray-500 text-sm sm:text-base">
-                Join KaryaSetu today 🎉
+                Join Padhai Dunia today 🎉
               </p>
             </div>
 
