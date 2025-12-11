@@ -1,7 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import FormContainer from "./FormCotainer";
+import FormContainer from "./FormContainer";
 import {
     Announcement,
     Attendance,
@@ -9,58 +9,63 @@ import {
     ClassCourse,
     ClassStudent,
     ClassTeacher,
+    Course,
     Event,
     Institute,
     Student,
     Teacher,
     User
 } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
 
 type ClassWithRelations = Class & {
     teachers: (ClassTeacher & { teacher: Teacher & { user: User } })[];
     students: (ClassStudent & { student: Student & { user: User } })[];
-    courses: ClassCourse[];
+    courses: (ClassCourse & { course: Course })[];
     announcements: Announcement[];
     events: Event[];
     institute: Institute;
-    attendance: Attendance[];
+    attendance: (Attendance & { student: Student & { user: User } })[];
 };
 
-export default function ClassesDetailsModal({
+export default async function ClassesDetailsModal({
     details,
     onCloseUrl,
-    role,
 }: {
     details: ClassWithRelations;
     onCloseUrl: string;
-    role?: string;
 }) {
-    const isAdmin = role === "admin";
+    const { sessionClaims } = await auth();
+      const role = (sessionClaims?.metadata as { role?: string })?.role;
+      const isAdmin = role === "admin" || role === "teacher";
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
             <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh] animate-fadeIn">
 
                 {/* HEADER */}
-                <div className="relative bg-linear-to-r from-indigo-600 to-purple-600 p-6 flex items-center gap-4 justify-between">
-                    <div className="text-white">
-                        <Image src="/class.png" alt="class" width={70} height={70} />
-                        <h2 className="text-3xl font-bold">{details.name}</h2>
-                        <p className="text-white/90 mt-1">
-                            Grade: <strong>{details.grade}</strong> | Academic Year:{" "}
-                            <strong>{details.academicYear}</strong>
-                        </p>
-                        <p className="text-white/80 text-sm">
-                            Institute: <strong>{details.institute?.name}</strong>
-                        </p>
-                    </div>
+                <div className="relative bg-linear-to-r from-indigo-600 to-purple-600 p-6">
 
-                    {isAdmin && (
-                        <div className="flex gap-2">
-                            <FormContainer table="class" type="update" data={details} id={details.id} />
-                            <FormContainer table="class" type="delete" id={details.id} />
+                    <div className="flex items-center gap-4">
+                        <Image src="/class.png" alt="class" width={70} height={70} className="rounded-full object-cover border-4 border-white shadow-xl"/>
+                        <div className="flex-1">
+                            <h2 className="text-3xl font-bold text-white">{details.name}</h2>
+                            <p className="text-white/90 mt-1">
+                                Grade: <strong>{details.grade}</strong> | Academic Year:{" "}
+                                <strong>{details.academicYear}</strong>
+                            </p>
+                            <p className="text-white/80 text-sm">
+                                Institute: <strong>{details.institute?.name}</strong>
+                            </p>
                         </div>
-                    )}
+
+                        {isAdmin && (
+                            <div className="flex gap-2">
+                                <FormContainer table="class" type="update" data={details} id={details.id} />
+                                <FormContainer table="class" type="delete" id={details.id} />
+                            </div>
+                        )}
+                    </div>
 
                     <Link
                         href={onCloseUrl}
@@ -94,12 +99,12 @@ export default function ClassesDetailsModal({
                     {/* RELATIONAL SECTIONS */}
                     <div className="space-y-3">
                         {[
-                            { label: "Teachers", items: details.teachers, mapKey: "teacher",icon:"/teacher.png" },
-                            { label: "Students", items: details.students, mapKey: "student",icon:"/student.png" },
-                            { label: "Courses", items: details.courses,icon:"/course.png"},
-                            { label: "Announcements", items: details.announcements,icon:"/announcement.png" },
-                            { label: "Events", items: details.events,icon:"/events.png" },
-                            { label: "Attendance Records", items: details.attendance,icon:"/record.png" },
+                            { label: "Teachers", items: details.teachers, mapKey: "teacher", icon: "/teacher.png" },
+                            { label: "Students", items: details.students, mapKey: "student", icon: "/student.png" },
+                            { label: "Courses", items: details.courses, icon: "/course.png" },
+                            { label: "Announcements", items: details.announcements, icon: "/announcement.png" },
+                            { label: "Events", items: details.events, icon: "/events.png" },
+                            { label: "Attendance Records", items: details.attendance, icon: "/record.png" },
                         ].map((section, i) => (
                             <details key={i} className="bg-gray-100 rounded-xl p-4 shadow-sm">
                                 <summary className="cursor-pointer font-semibold text-gray-800 flex justify-between items-center">
@@ -117,7 +122,11 @@ export default function ClassesDetailsModal({
                                                     ? `${item.teacher.user.firstName} ${item.teacher.user.lastName}`
                                                     : item.student
                                                         ? `${item.student.user.firstName} ${item.student.user.lastName}`
-                                                        : item.title ?? `Item #${idx + 1}`
+                                                        : item.course
+                                                            ? item.course.title
+                                                            : item.attendance
+                                                                ? `Record ID: ${item.attendance.studentId} | Date: ${new Date(item.date).toLocaleDateString()}`
+                                                                : item.title ?? `Item #${idx + 1}`
                                                 }
                                             </div>
                                         ))

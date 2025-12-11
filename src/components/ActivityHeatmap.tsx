@@ -198,7 +198,7 @@ export default function ActivityHeatmap({
                         key={dayIndex}
                         title={title}
                         aria-label={title}
-                        className={`w-[11px] h-[11px] rounded-[2px] ${
+                        className={`w-[11px] h-[11px] rounded-xs ${
                           cell.count === -1 ? '' : 'border border-black/10 cursor-pointer'
                         } ${colorClass} transition-transform duration-100 hover:scale-110`}
                       />
@@ -217,7 +217,7 @@ export default function ActivityHeatmap({
         {colors.map((c, i) => (
           <div
             key={i}
-            className={`w-[11px] h-[11px] rounded-[2px] ${c} border border-black/10`}
+            className={`w-[11px] h-[11px] rounded-xs ${c} border border-black/10`}
             title={`Level ${i}`}
           />
         ))}

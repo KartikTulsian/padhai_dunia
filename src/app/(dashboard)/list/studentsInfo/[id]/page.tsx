@@ -8,6 +8,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ActivityHeatmap from "@/components/ActivityHeatmap";
+import FormContainer from "@/components/FormContainer";
+import { Target, Trophy } from "lucide-react";
 
 export default async function SingleStudentPage(props: { params: { id: string } }) {
   const { id } = await props.params;
@@ -158,6 +160,10 @@ export default async function SingleStudentPage(props: { params: { id: string } 
       )
     : 0;
 
+  const formatGoal = (goal: string) => {
+    return goal.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+  };
+
   const IconSpan = ({ children, className = "text-blue-500" }: { children: React.ReactNode, className?: string }) => (
     <span className={`w-5 h-5 flex items-center justify-center ${className}`}>
       {children}
@@ -190,8 +196,8 @@ export default async function SingleStudentPage(props: { params: { id: string } 
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-extrabold text-gray-900">{fullName}</h1>
-                  {role === "admin" && (
-                    <FormModal table="student" type="update" data={student} />
+                  {(role === "admin" || role === "institute" || role === "teacher") && (
+                    <FormContainer table="student" type="update" data={student} />
                   )}
                 </div>
                 <p className="text-base text-blue-600 font-semibold italic">🆔 Student ID: {student.studentId}</p>
@@ -464,6 +470,37 @@ export default async function SingleStudentPage(props: { params: { id: string } 
 
       {/* RIGHT COLUMN (NARROW SIDEBAR) */}
       <div className="w-full xl:w-1/3 flex flex-col gap-6">
+
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-indigo-100">
+           <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+              <div className="flex items-center gap-2">
+                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                    <Target className="w-5 h-5" />
+                 </div>
+                 <div>
+                    <h2 className="text-lg font-bold text-gray-800">Learning Goals</h2>
+                 </div>
+              </div>
+              <Trophy className="w-5 h-5 text-yellow-500" />
+           </div>
+           
+           {student.goals && student.goals.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                 {student.goals.map((goal, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100 flex items-center gap-1"
+                    >
+                       🎯 {formatGoal(goal)}
+                    </span>
+                 ))}
+              </div>
+           ) : (
+              <div className="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                 <p className="text-xs text-gray-500">No goals set.</p>
+              </div>
+           )}
+        </div>
         
         {/* QUICK ACTIONS */}
         <div className="bg-white p-6 rounded-xl shadow-lg">

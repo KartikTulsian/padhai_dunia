@@ -79,12 +79,12 @@ const menuItems = [
         href: "/list/events",
         visible: ["admin", "teacher", "student", "institute"],
       },
-      // {
-      //   icon: "/message.png",
-      //   label: "Messages",
-      //   href: "/list/messages",
-      //   visible: ["admin", "teacher", "institute"],
-      // },
+      {
+        icon: "/message.png",
+        label: "Messages",
+        href: "/list/messages",
+        visible: ["admin", "teacher", "institute"],
+      },
       {
         icon: "/announcement.png",
         label: "Announcements",

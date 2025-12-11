@@ -10,7 +10,7 @@ import Link from "next/link";
 
 import { Prisma, Event, Institute, Class } from "@prisma/client";
 import EventsDetailsModal from "@/components/EventsDetailsModal";
-import FormContainer from "@/components/FormCotainer";
+import FormContainer from "@/components/FormContainer";
 
 type EventList = Event & {
   institute: Institute | null;

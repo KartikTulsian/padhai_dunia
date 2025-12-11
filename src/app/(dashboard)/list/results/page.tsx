@@ -1,186 +1,167 @@
-"use client";
-
-import { useState } from "react";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
-import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { resultsData, role, loggedInUser } from "@/lib/data";
-import Image from "next/image";
+import prisma from "@/lib/prisma";
+import { ITEM_PER_PAGE } from "@/lib/settings";
+import { auth } from "@clerk/nextjs/server";
+import Table from "@/components/Table";
+import Link from "next/link";
 
-type StudentResult = {
-  id: number;
-  studentId: string;
-  studentName: string;
-  score: number;
+import {
+  Prisma,
+  Exam,
+  ExamAttempt,
+  Course,
+  Teacher,
+  User,
+  Student,
+  Institute,
+} from "@prisma/client";
+import ResultsDetailsModal from "@/components/ResultsDetailsModal";
+
+type ExamWithResults = Exam & {
+  course: Course & { institute: Institute | null };
+  teacher: Teacher & { user: User };
+  attempts: (ExamAttempt & { student: Student & { user: User } })[];
 };
 
-type ResultBatch = {
-  id: number;
-  subjectCode: string;
-  subject: string;
-  class: string;
-  teacher: string;
-  examDate: string;
-  resultDate: string;
-  students: StudentResult[];
-};
+export default async function ResultListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}) {
+  const { userId, sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const currentUserId = userId;
 
+  const { page, resultId, search } = await searchParams;
+  const p = page ? parseInt(page) : 1;
 
-const getHighestMarks = (students: StudentResult[]) =>
-  Math.max(...students.map((s) => s.score));
+  const columns = [
+    { header: "Exam", accessor: "title" },
+    { header: "Course", accessor: "course" },
+    { header: "Teacher", accessor: "teacher" },
+    { header: "Exam Date", accessor: "examDate" },
+    { header: "Published On", accessor: "publishedOn" },
+    { header: "Students", accessor: "studentCount" },
+    { header: "Highest Marks", accessor: "highestMarks" },
+  ];
 
+  // ---------- BUILD WHERE QUERY ----------
+  const query: Prisma.ExamWhereInput = {};
 
-const columns = [
-  { header: "Subject Code", accessor: "subjectCode" },
-  { header: "Subject Name", accessor: "subject" },
-  { header: "Teacher", accessor: "teacher" },
-  { header: "Date of Exam", accessor: "examDate" },
-  { header: "Date of Result", accessor: "resultDate" },
-  { header: "Class", accessor: "class" },
-  { header: "Students", accessor: "studentCount" },
-  { header: "Highest Marks", accessor: "highestMarks" },
-  { header: "Actions", accessor: "actions" },
-];
-
-const ResultListPage = () => {
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-
-
-  let filteredResults = resultsData as ResultBatch[];
-
-  if (role === "teacher") {
-    filteredResults = resultsData.filter((r) => r.teacher === loggedInUser.name);
-  } else if (role === "student") {
-    filteredResults = resultsData.filter((r) =>
-      r.students.some((s) => s.studentName === loggedInUser.name)
-    );
+  if (search) {
+    query.OR = [
+      { title: { contains: search, mode: "insensitive" } },
+      { course: { title: { contains: search, mode: "insensitive" } } },
+    ];
   }
 
-  const toggleExpand = (id: number) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  if (role === "teacher" && currentUserId) {
+    query.teacher = {
+      userId: currentUserId,
+    };
+  }
 
-  // Render row for main table
-  const renderRow = (item: ResultBatch) => {
-    const highestMarks = getHighestMarks(item.students);
-    const studentCount = item.students.length;
-    const isExpanded = expandedId === item.id;
+  if (role === "student" && currentUserId) {
+    query.attempts = {
+      some: {
+        student: { userId: currentUserId },
+        isGraded: true,
+      },
+    };
+  }
 
-    // For student view — show limited data
-    if (role === "student") {
-      const studentResult = item.students.find(
-        (s) => s.studentName === loggedInUser.name
-      );
-      return (
-        <tr
-          key={item.id}
-          className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF]"
-        >
-          <td className="p-4">{item.subject}</td>
-          <td>{item.teacher}</td>
-          <td>{item.examDate}</td>
-          <td>{studentResult?.score ?? "-"}</td>
-          <td>{highestMarks}</td>
-        </tr>
-      );
-    }
+  if (role === "institute" && currentUserId) {
+    query.course = {
+      instituteId: currentUserId,
+    };
+  }
 
-    // For admin/teacher view
+  // ---------------- FETCH RESULTS ----------------
+  const [exams, count] = await prisma.$transaction([
+    prisma.exam.findMany({
+      where: query,
+      include: {
+        course: { include: { institute: true } },
+        teacher: { include: { user: true } },
+        attempts: { include: { student: { include: { user: true } } } },
+      },
+      take: ITEM_PER_PAGE,
+      skip: (p - 1) * ITEM_PER_PAGE,
+      orderBy: { scheduledAt: "desc" },
+    }),
+    prisma.exam.count({ where: query }),
+  ]) as [ExamWithResults[], number];
+
+  const selectedResult = resultId
+    ? await prisma.exam.findUnique({
+        where: { id: resultId },
+        include: {
+          course: { include: { institute: true } },
+          teacher: { include: { user: true } },
+          attempts: { include: { student: { include: { user: true } } } },
+        },
+      })
+    : null;
+
+  // ---------- RENDER ROW ----------
+  const renderRow = (exam: ExamWithResults) => {
+    const gradedAttempts = exam.attempts.filter((a) => a.isGraded);
+    const highestMarks = gradedAttempts.length
+      ? Math.max(...gradedAttempts.map((a) => a.marksObtained ?? 0))
+      : 0;
+    const studentCount = gradedAttempts.length;
+
+    const publishTimes = gradedAttempts
+      .map((a) => a.submittedAt?.getTime())
+      .filter(Boolean) as number[];
+    const publishedOn = publishTimes.length
+      ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(
+          new Date(Math.max(...publishTimes))
+        )
+      : "-";
+
     return (
-      <>
-        <tr
-          key={item.id}
-          className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] cursor-pointer"
-          onClick={() => toggleExpand(item.id)}
-        >
-          <td className="p-4">{item.subjectCode}</td>
-          <td>{item.subject}</td>
-          <td>{item.teacher}</td>
-          <td>{item.examDate}</td>
-          <td>{item.resultDate}</td>
-          <td>{item.class}</td>
-          <td>{studentCount}</td>
-          <td>{highestMarks}</td>
-          <td>
-            {(role === "admin" || role === "teacher") && (
-              <div className="flex items-center gap-2">
-                <FormModal table="result" type="update" data={item} />
-                <FormModal table="result" type="delete" id={item.id} />
-              </div>
-            )}
-          </td>
-        </tr>
-
-        {/* Expanded student-level details */}
-        {isExpanded && (
-          <tr className="bg-slate-50 text-sm">
-            <td colSpan={columns.length}>
-              <div className="p-4">
-                <h3 className="font-semibold mb-2">
-                  Student-wise Marks for {item.subject}
-                </h3>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#CFCEFF] text-white">
-                      <th className="p-2 text-left">Student ID</th>
-                      <th className="p-2 text-left">Name</th>
-                      <th className="p-2 text-left">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {item.students.map((student) => (
-                      <tr key={student.id} className="border-b">
-                        <td className="p-2">{student.studentId}</td>
-                        <td className="p-2">{student.studentName}</td>
-                        <td className="p-2">{student.score}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </td>
-          </tr>
-        )}
-      </>
+      <tr className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] transition cursor-pointer">
+        <td className="p-4 font-medium">
+          <Link href={`?resultId=${exam.id}&page=${p}`} className="hover:underline">
+            {exam.title}
+          </Link>
+        </td>
+        <td>{exam.course.title}</td>
+        <td>{exam.teacher.user.firstName} {exam.teacher.user.lastName}</td>
+        <td>{new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(exam.scheduledAt)}</td>
+        <td>{publishedOn}</td>
+        <td>{studentCount}</td>
+        <td>{highestMarks}</td>
+      </tr>
     );
   };
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
-      {/* TOP BAR */}
-      <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-lg font-semibold">
           {role === "student"
             ? "My Results"
             : role === "teacher"
-            ? "My Issued Results"
-            : "All Batches Results"}
+            ? "Published Results"
+            : "All Results"}
         </h1>
 
-        <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4">
           <TableSearch />
-          <div className="flex items-center gap-4 self-end">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              <Image src="/filter.png" alt="" width={14} height={14} />
-            </button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full bg-[#FAE27C]">
-              <Image src="/sort.png" alt="" width={14} height={14} />
-            </button>
-            {(role === "admin" || role === "teacher") && (
-              <FormModal table="result" type="create" />
-            )}
-          </div>
+          {(role === "admin" || role === "teacher") && <FormModal table="result" type="create" />}
         </div>
       </div>
 
-      {/* TABLE */}
-      <Table columns={columns} renderRow={renderRow} data={filteredResults} />
+      <Table columns={columns} renderRow={renderRow} data={exams} />
+      <Pagination page={p} count={count} />
 
-      {/* PAGINATION */}
-      <Pagination />
+      {selectedResult && (
+        <ResultsDetailsModal result={selectedResult} onCloseUrl={`/list/results?page=${p}`} />
+      )}
     </div>
   );
-};
-
-export default ResultListPage;
+}

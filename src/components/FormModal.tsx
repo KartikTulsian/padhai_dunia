@@ -6,15 +6,19 @@ import Image from "next/image";
 import React, { useState, JSX, Dispatch } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { FormContainerProps } from "./FormCotainer";
+import { FormContainerProps } from "./FormContainer";
 
 import {
   deleteAnnouncement,
   deleteAssignment,
   deleteClass,
   deleteCourse,
+  deleteCourseModule,
+  deleteCourseTeacher,
   deleteEvent,
   deleteExam,
+  deleteInstitute,
+  deleteInstituteAdmin,
   deleteLesson,
   deleteQuiz,
   deleteResult,
@@ -56,9 +60,12 @@ const deleteActionMap: Record<DeleteTable, DeleteAction> = {
   assignment: (data) => deleteAssignment(baseDeleteState, data),
   teacher: (data) => deleteTeacher(baseDeleteState, data),
   student: (data) => deleteStudent(baseDeleteState, data),
-  institute: (data) => deleteStudent(baseDeleteState, data), // TODO: replace with real deleteInstitute when you add it
+  institute: (data) => deleteInstitute(baseDeleteState, data),
+  instituteAdmin: (data) => deleteInstituteAdmin(baseDeleteState, data),
   studyMaterial: (data) => deleteStudyMaterial(baseDeleteState, data),
   user: (data) => deleteUser(baseDeleteState, data),
+  courseModule: (data) => deleteCourseModule(baseDeleteState, data),
+  courseTeacher: (data) => deleteCourseTeacher(baseDeleteState, data),
 };
 
 // ---------- LAZY-LOADED FORMS ----------
@@ -66,9 +73,47 @@ const deleteActionMap: Record<DeleteTable, DeleteAction> = {
 const AnnouncementForm = dynamic(() => import("./forms/AnnouncementForm"), {
   loading: () => <h1>Loading...</h1>,
 });
-
 const EventForm = dynamic(() => import("./forms/EventForm"), {
   loading: () => <h1>Loading...</h1>,
+});
+const ExamForm = dynamic(() => import("./forms/ExamForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const AssignmentForm = dynamic(() => import("./forms/AssignmentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const LessonForm = dynamic(() => import("./forms/LessonForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ResultForm = dynamic(() => import("./forms/ResultForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ClassForm = dynamic(() => import("./forms/ClassForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const CourseForm = dynamic(() => import("./forms/CourseForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const StudentForm = dynamic(() => import("./forms/StudentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const InstituteForm = dynamic(() => import("./forms/InstituteForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const InstituteAdminForm = dynamic(() => import("./forms/InstituteAdminForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const CourseModuleForm = dynamic(() => import("./forms/CourseModuleForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const CourseTeacherForm = dynamic(() => import("./forms/CourseTeacherForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const StudyMaterialForm = dynamic(() => import("./forms/StudyMaterialForm"),{
+    loading: () => <h1>Loading...</h1>,
 });
 
 // Add more forms as needed
@@ -77,7 +122,7 @@ const forms: {
     setOpen: Dispatch<React.SetStateAction<boolean>>,
     type: "create" | "update",
     data?: unknown,
-    relatedData?: unknown
+    relatedData?: any
   ) => JSX.Element;
 } = {
   announcement: (setOpen, type, data, relatedData) => (
@@ -94,6 +139,110 @@ const forms: {
       data={data}
       setOpen={setOpen}
       relatedData={relatedData}
+    />
+  ),
+  exam: (setOpen, type, data, relatedData) => (
+    <ExamForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { courses: any[]; teachers: any[] }}
+    />
+  ),
+  assignment: (setOpen, type, data, relatedData) => (
+    <AssignmentForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { courses: any[]; teachers: any[] }}
+    />
+  ),
+  lesson: (setOpen, type, data, relatedData) => (
+    <LessonForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData}
+    />
+  ),
+  result: (setOpen, type, data, relatedData) => (
+    <ResultForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { courses: any[]; teachers: any[] }}
+    />
+  ),
+  class: (setOpen, type, data, relatedData) => (
+    <ClassForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { institutes: any[]; teachers: any[] }}
+    />
+  ),
+  course: (setOpen, type, data, relatedData) => (
+    <CourseForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { classes: any[] }}
+    />
+  ),
+  student: (setOpen, type, data, relatedData) => (
+    <StudentForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { institutes: any[]; classes: any[] }}
+    />
+  ),
+  teacher: (setOpen, type, data, relatedData) => (
+    <TeacherForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { institutes: any[] }}
+    />
+  ),
+  institute: (setOpen, type, data, relatedData) => (
+    <InstituteForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { users?: any[] }}
+    />
+  ),
+  instituteAdmin: (setOpen, type, data, relatedData) => (
+    <InstituteAdminForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { institutes: any[] }}
+    />
+  ),
+  courseModule: (setOpen, type, data, relatedData) => (
+    <CourseModuleForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { courseId: string }}
+    />
+  ),
+  courseTeacher: (setOpen, type, data, relatedData) => (
+    <CourseTeacherForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { teachers: any[]; courseId: string }}
+    />
+  ),
+  studyMaterial: (setOpen, type, data, relatedData) => (
+    <StudyMaterialForm
+      type={type}
+      data={data}
+      setOpen={setOpen}
+      relatedData={relatedData as { courseId: string }}
     />
   ),
 };
@@ -132,7 +281,43 @@ export default function FormModal({
         case "event":
           formData.append("id", id);
           break;
+        case "lesson":
+          formData.append("id", id);
+          break;
+        case "class":
+          formData.append("id", id);
+          break;
         case "announcement":
+          formData.append("id", id);
+          break;
+        case "exam":
+          formData.append("id", id);
+          break;
+        case "result":
+          formData.append("id", id);
+          break;
+        case "course":
+          formData.append("id", id);
+          break;
+        case "assignment":
+          formData.append("id", id);
+          break;
+        case "student":
+          formData.append("id", id);
+          break;
+        case "teacher":
+          formData.append("id", id);
+          break;
+        case "institute":
+          formData.append("id", id);
+          break;
+        case "courseModule":
+          formData.append("id", id);
+          break;
+        case "courseTeacher":
+          formData.append("id", id);
+          break;
+        case "studyMaterial":
           formData.append("id", id);
           break;
         default:

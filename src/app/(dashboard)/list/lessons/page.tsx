@@ -9,6 +9,7 @@ import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import LessonsDetailsModal from "@/components/LessonsDetailsModal";
 import Link from "next/link";
+import FormContainer from "@/components/FormContainer";
 
 type LessonList = Lesson & {
   module: CourseModule & { course: Course };
@@ -106,8 +107,8 @@ export default async function LessonsListPage({
       <td>
         {(role === "admin" || role === "teacher") && (
           <div className="flex items-center gap-2">
-            <FormModal table="lesson" type="update" data={item} />
-            {role === "admin" && <FormModal table="lesson" type="delete" id={item.id} />}
+            <FormContainer table="lesson" type="update" data={item} />
+            {role === "admin" && <FormContainer table="lesson" type="delete" id={item.id} />}
           </div>
         )}
       </td>
@@ -131,7 +132,7 @@ export default async function LessonsListPage({
           </button>
 
           {(role === "admin" || role === "teacher") && (
-            <FormModal table="lesson" type="create" />
+            <FormContainer table="lesson" type="create" />
           )}
         </div>
       </div>

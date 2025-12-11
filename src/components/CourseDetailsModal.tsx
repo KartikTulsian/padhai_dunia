@@ -1,13 +1,13 @@
 import React from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
-import { Assignment, ClassCourse, Course, CourseEnrollment, CourseModule, CourseReview, CourseTeacher, Exam, Institute, Quiz, StudyMaterial } from "@prisma/client";
+import { Assignment, ClassCourse, Course, CourseEnrollment, CourseModule, CourseReview, CourseTeacher, Exam, Institute, Quiz, StudyMaterial, Teacher, User } from "@prisma/client";
 import { auth } from '@clerk/nextjs/server';
-import FormContainer from './FormCotainer';
+import FormContainer from './FormContainer';
 
 type CourseWithRelations = Course & {
   enrollments: CourseEnrollment[];
-  teachers: (CourseTeacher & { teacher?: any })[];
+  teachers: (CourseTeacher & { teacher?: Teacher & { user: User } })[];
   modules: CourseModule[];
   assignments: Assignment[];
   exams: Exam[];
@@ -28,6 +28,18 @@ export default async function CourseDetailsModal({
   const { userId, sessionClaims } = await auth();
   const role = (sessionClaims?.metadata as { role?: string })?.role;
   const isAdmin = role === "admin";
+
+  const itemRenderers: Record<string, (item:any)=>string> = {
+  Teachers: (i)=> `${i.teacher?.user?.firstName} ${i.teacher?.user?.lastName}`,
+  Modules: (i)=> i.title,
+  Assignments: (i)=> i.title,
+  Exams: (i)=> i.title,
+  Quizzes: (i)=> i.title,
+  Resources: (i)=> i.name || i.title,
+  Classes: (i)=> i.class?.name,
+  Reviews: (i)=> i.title,
+};
+
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-6">
@@ -189,7 +201,7 @@ export default async function CourseDetailsModal({
                     {section.items && section.items.length > 0 ? (
                       section.items.map((item: any, idx: number) => (
                         <div key={idx} className="border-b pb-2 text-gray-600 last:border-0">
-                          {item.title || item.name || item.teacher?.name || `Item #${idx + 1}`}
+                          {itemRenderers[section.label]?.(item) ?? `Item #${idx + 1}`}
                         </div>
                       ))
                     ) : (

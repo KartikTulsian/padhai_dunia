@@ -1,6 +1,7 @@
 import ActivityHeatmap from "@/components/ActivityHeatmap";
 import Announcements from "@/components/Announcements";
 import BigCalendar from "@/components/BigCalendar";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Performance from "@/components/Performance";
 import { role } from "@/lib/data";
@@ -203,8 +204,8 @@ export default async function SingleTeacherPage(props: { params: { id: string } 
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <h1 className="text-2xl font-extrabold text-gray-900">{fullName}</h1>
-                  {role === "admin" && (
-                    <FormModal table="teacher" type="update" data={teacher} />
+                  {(role === "admin" || role === "institute") && (
+                    <FormContainer table="teacher" type="update" data={teacher} />
                   )}
                 </div>
                 <p className="text-base text-indigo-600 font-semibold italic">{teacher.qualification || "Educator"}</p>

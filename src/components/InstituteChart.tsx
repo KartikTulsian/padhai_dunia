@@ -14,7 +14,7 @@ import { universityRegistrationData } from "@/lib/data";
 
 export default function UniversityRegistrationChart() {
   return (
-    <div className="bg-white shadow-md rounded-2xl p-6 w-full h-[450px]">
+    <div className="bg-white shadow-md rounded-xl p-6 w-full h-[450px]">
       <h2 className="text-xl font-semibold mb-4 text-gray-700">
         Registration Trend – Schools, Colleges & Coaching Centers
       </h2>

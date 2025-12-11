@@ -225,17 +225,17 @@ const Page = () => {
               About Us
             </AppLink>
             <AppLink
-              href="/Courses"
+              href="/courses"
               className="text-foreground hover:text-primary transition-colors"
             >
               Courses
             </AppLink>
-            {/* <AppLink
+            { <AppLink
               href="/teams"
               className="text-foreground hover:text-primary transition-colors"
             >
               Team
-            </AppLink> */}
+            </AppLink> }
             <AppLink href="/contact" className="text-foreground hover:text-primary transition-colors">
               Contact Us
             </AppLink>

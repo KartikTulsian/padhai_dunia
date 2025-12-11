@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -149,6 +150,19 @@ model InstituteAdmin {
 // STUDENT MANAGEMENT
 // ============================================
 
+enum StudentGoal {
+  JEE_PREPARATION
+  NEET_PREPARATION
+  CAT_PREPARATION
+  ENGINEERING
+  MEDICAL
+  GATE_PREPARATION
+  UPSC_PREPARATION
+  SKILL_DEVELOPMENT // coding, design, etc.
+  SCHOOL_CURRICULUM // 10th, 12th boards
+  OTHER
+}
+
 model Student {
   id     String @id @default(uuid())
   userId String @unique
@@ -157,6 +171,8 @@ model Student {
   studentId   String     @unique // Institute-specific ID
   instituteId String?
   institute   Institute? @relation(fields: [instituteId], references: [id], onDelete: SetNull)
+
+  goals       StudentGoal[] @default([])
 
   dateOfBirth    DateTime?
   guardianName   String?
@@ -362,6 +378,8 @@ model Course {
   updatedAt   DateTime  @updatedAt
   publishedAt DateTime?
 
+  targetAudience StudentGoal[] @default([])
+
   // Relationships
   enrollments CourseEnrollment[]
   teachers    CourseTeacher[]
@@ -372,6 +390,8 @@ model Course {
   resources   StudyMaterial[]
   reviews     CourseReview[]
   classes     ClassCourse[]
+
+  messages Message[] @relation("CourseMessages")
 
   @@index([code])
   @@index([type])
@@ -947,6 +967,10 @@ model Message {
   receiverId String
   receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
+  // Context for the chat
+  courseId String?
+  course   Course? @relation("CourseMessages", fields: [courseId], references: [id], onDelete: SetNull)
+
   subject     String?
   content     String
   attachments String[]
@@ -958,7 +982,7 @@ model Message {
 
   @@index([senderId])
   @@index([receiverId])
-  @@index([isRead])
+  @@index([courseId])
   @@index([sentAt])
 }
 

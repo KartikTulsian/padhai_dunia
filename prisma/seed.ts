@@ -1129,6 +1129,7 @@ async function main() {
         content: 'Great work on your DBMS assignment! Keep it up.',
         isRead: true,
         readAt: new Date(),
+        courseId: courses[0].id
       },
     }),
     prisma.message.create({
@@ -1138,6 +1139,7 @@ async function main() {
         subject: 'Course Update Required',
         content: 'Please update the course materials for next semester.',
         isRead: false,
+        courseId: courses[1].id
       },
     }),
   ]);

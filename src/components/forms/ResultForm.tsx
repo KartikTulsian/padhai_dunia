@@ -20,19 +20,23 @@ import { CldUploadWidget } from "next-cloudinary";
 import { UploadCloud } from "lucide-react";
 import Image from "next/image";
 
-type Props = {
-  type: "create" | "update";
-  data?: any;
-  setOpen: Dispatch<React.SetStateAction<boolean>>;
-  relatedData?:any;
-};
 
-export default function ResultForm({ type, data, setOpen, relatedData }: Props) {
+export default function ResultForm({ 
+  type,
+  data,
+  setOpen,
+  relatedData 
+}:{
+  type:"create"|"update";
+  data?:any;
+  setOpen:Dispatch<React.SetStateAction<boolean>>;
+  relatedData?:any;
+}) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    watch,
   } = useForm<ResultSchema>({
     resolver: zodResolver(resultSchema),
     defaultValues: {
@@ -77,14 +81,14 @@ export default function ResultForm({ type, data, setOpen, relatedData }: Props) 
       setHasShownSuccessToast(true);
 
       if (type === "create") {
-        reset();
+        watch();
         setMedia(null);
       }
 
       setOpen(false);
       router.refresh();
     }
-  }, [state, hasShownSuccessToast, reset, setOpen, router, type]);
+  }, [state, hasShownSuccessToast, watch, setOpen, router, type]);
 
   return (
     <form className="flex flex-col gap-6" onSubmit={onSubmit}>

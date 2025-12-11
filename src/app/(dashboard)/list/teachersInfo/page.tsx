@@ -1,11 +1,12 @@
 import AppLink from "@/components/AppLink";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
+import { auth } from "@clerk/nextjs/server";
 import { ClassTeacher, CourseTeacher, Institute, Prisma, Teacher, User } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -33,8 +34,8 @@ export default async function TeacherListPage({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
 
-  // const { sessionClaims } = await auth();
-  // const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   const columns = [
     { header: "Teacher Info", accessor: "info" },
@@ -119,8 +120,8 @@ export default async function TeacherListPage({
             </AppLink>
 
             {/* Delete Button (Admin only) */}
-            {role === "admin" && (
-              <FormModal table="teacher" type="delete" id={item.id} />
+            {(role === "admin" || role === "institute")&& (
+              <FormContainer table="teacher" type="delete" id={item.id} />
             )}
 
             {/* Status Indicator (Quick Glance) */}
@@ -190,9 +191,9 @@ export default async function TeacherListPage({
           </button>
 
           {/* Create Button (Admin only) */}
-          {role === "admin" &&
+          {/* {(role === "admin" || role === "institute") &&
             <FormModal table="teacher" type="create" />
-          }
+          } */}
         </div>
       </div>
 

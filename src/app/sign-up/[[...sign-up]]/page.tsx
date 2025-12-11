@@ -41,6 +41,34 @@ export default function SignUpPage() {
 
             <Clerk.GlobalError className="text-sm text-red-500" />
 
+            <div className="grid grid-cols-2 gap-4">
+              <Clerk.Field name="firstName">
+                <Clerk.Label className="block text-sm font-medium text-gray-700">
+                  First Name
+                </Clerk.Label>
+                <Clerk.Input
+                  type="text"
+                  required
+                  placeholder="John"
+                  className="mt-1 w-full border rounded-lg p-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                />
+                <Clerk.FieldError className="text-red-600 text-xs mt-1" />
+              </Clerk.Field>
+
+              <Clerk.Field name="lastName">
+                <Clerk.Label className="block text-sm font-medium text-gray-700">
+                  Last Name
+                </Clerk.Label>
+                <Clerk.Input
+                  type="text"
+                  required
+                  placeholder="Doe"
+                  className="mt-1 w-full border rounded-lg p-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                />
+                <Clerk.FieldError className="text-red-600 text-xs mt-1" />
+              </Clerk.Field>
+            </div>
+            
             <Clerk.Field name="emailAddress">
               <Clerk.Label className="block text-sm font-medium text-gray-700">
                 Email

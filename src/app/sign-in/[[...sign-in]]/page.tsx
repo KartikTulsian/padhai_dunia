@@ -29,7 +29,9 @@ export default function SignInPage() {
         router.push(`/${role}`);
       } else {
         // No role assigned - sign out and show error
-        handleInvalidUser();
+        // handleInvalidUser();
+
+        router.push("/onboarding");
       }
     }
   }, [isSignedIn, user, isLoaded, router]);

@@ -8,6 +8,7 @@ import prisma from "@/lib/prisma";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import FormContainer from "@/components/FormContainer";
 
 export default async function SingleInstitutePage(props: { params: { id: string } }) {
   const { id } = await props.params;
@@ -36,6 +37,7 @@ export default async function SingleInstitutePage(props: { params: { id: string 
               email: true,
               avatar: true,
               status: true,
+              phoneNumber: true,
             },
           },
         },
@@ -235,7 +237,7 @@ export default async function SingleInstitutePage(props: { params: { id: string 
                 <div className="flex items-center justify-between mb-2">
                   <h1 className="text-3xl font-extrabold text-gray-900">{institute.name}</h1>
                   {role === "admin" && (
-                    <FormModal table="institute" type="update" data={institute} />
+                    <FormContainer table="institute" type="update" data={institute} />
                   )}
                 </div>
                 <p className="text-base text-indigo-600 font-semibold">
@@ -390,6 +392,8 @@ export default async function SingleInstitutePage(props: { params: { id: string 
                     }`}>
                       {admin.user.status}
                     </span>
+                    <FormContainer table="instituteAdmin" type="update" data={admin} />
+                    {/* <FormContainer table="instituteAdmin" type="delete" id={admin.id} /> */}
                   </div>
                 ))}
               </div>

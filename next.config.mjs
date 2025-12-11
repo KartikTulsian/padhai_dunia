@@ -8,9 +8,25 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      { 
-        // Retain the existing configuration
-        hostname: "images.pexels.com" 
+      {
+        protocol: "https",
+        hostname: "img.clerk.com",
+      },
+      {
+        protocol: "https",
+        hostname: "media.example.com", // ✅ your actual image host
+      },
+      {
+        protocol: "https",
+        hostname: "images.pexels.com", // if you also use pexels images
+      },
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com", 
+      },
+      {
+        protocol: 'https',
+        hostname: 'source.unsplash.com',
       },
     ],
   },

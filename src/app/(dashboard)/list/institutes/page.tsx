@@ -1,19 +1,19 @@
 import AppLink from "@/components/AppLink";
-import FormContainer from "@/components/FormCotainer";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import { Institute, InstituteAdmin, Prisma, Student, Teacher } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
+import { Institute, InstituteAdmin, Prisma, Student, Teacher, User } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import { HTMLAttributes } from "react";
 
 type InstituteList = Institute & {
-  admins: InstituteAdmin[];
+  admins: (InstituteAdmin & { user: User })[];
   students: Student[];
   teachers: Teacher[];
 };
@@ -41,6 +41,9 @@ export default async function InstitutesListPage({
     { header: "Teachers", accessor: "teachers", className: "hidden xl:table-cell" },
     { header: "Actions", accessor: "action" },
   ];
+
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   const renderRow = (item: InstituteList) => {
     // Determine the status color
@@ -114,7 +117,7 @@ export default async function InstitutesListPage({
 
             {/* Delete Button (Admin only) */}
             {role === "admin" && (
-              <FormModal table="institute" type="delete" id={item.id} />
+              <FormContainer table="institute" type="delete" id={item.id} />
             )}
 
             {/* Status Indicator (Quick Glance) */}
@@ -153,7 +156,7 @@ export default async function InstitutesListPage({
     prisma.institute.findMany({
       where: query,
       include: {
-        admins: true,
+        admins: { include: { user: true } },
         students: true,
         teachers: true,
       },
@@ -184,9 +187,9 @@ export default async function InstitutesListPage({
           </button>
 
           {/* Create Button (Admin only) */}
-          {role === "admin" &&
+          {/* {role === "admin" &&
             <FormContainer table="institute" type="create" />
-          }
+          } */}
         </div>
       </div>
 

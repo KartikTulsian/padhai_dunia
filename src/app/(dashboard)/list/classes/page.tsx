@@ -1,4 +1,5 @@
 import ClassesDetailsModal from "@/components/ClassesDetailsModal";
+import FormContainer from "@/components/FormContainer";
 import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
@@ -6,18 +7,18 @@ import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
 import { auth } from "@clerk/nextjs/server";
-import { Announcement, Attendance, Class, ClassCourse, ClassStudent, ClassTeacher, Event, Institute, Prisma, Student, Teacher, User } from "@prisma/client";
+import { Announcement, Attendance, Class, ClassCourse, ClassStudent, ClassTeacher, Course, Event, Institute, Prisma, Student, Teacher, User } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 
 type ClassList = Class & {
   teachers: (ClassTeacher & { teacher: Teacher & { user: User } })[];
   students: (ClassStudent & { student: Student & { user: User } })[];
-  courses: ClassCourse[];
+  courses: (ClassCourse & { course: Course })[];
   announcements: Announcement[];
   events: Event[];
   institute: Institute;
-  attendance: Attendance[];
+  attendance: (Attendance & { student: Student & { user: User } })[];
 };
 
 export default async function ClassListPage({
@@ -30,6 +31,7 @@ export default async function ClassListPage({
     { header: "Capacity", accessor: "capacity", className: "hidden md:table-cell" },
     { header: "Grade", accessor: "grade", className: "hidden md:table-cell" },
     { header: "Academic Year", accessor: "academicYear", className: "hidden md:table-cell" },
+    { header: "Primary Teacher", accessor: "primaryTeacher", className: "hidden md:table-cell" },
   ];
 
   const { sessionClaims } = await auth();
@@ -59,10 +61,10 @@ export default async function ClassListPage({
       include: {
         teachers: { include: { teacher: { include: { user: true } } } },
         students: { include: { student: { include: { user: true } } } },
-        courses: true,
+        courses: { include: { course: true } },
         announcements: true,
         events: true,
-        attendance: true,
+        attendance: { include: { student: { include: { user: true } } } },
         institute: true,
       },
       take: ITEM_PER_PAGE,
@@ -78,10 +80,10 @@ export default async function ClassListPage({
       include: {
         teachers: { include: { teacher: { include: { user: true } } } },
         students: { include: { student: { include: { user: true } } } },
-        courses: true,
+        courses: { include: { course: true } },
         announcements: true,
         events: true,
-        attendance: true,
+        attendance: { include: { student: { include: { user: true } } } },
         institute: true,
       },
     })
@@ -101,6 +103,7 @@ export default async function ClassListPage({
       </td>
       <td className="hidden md:table-cell">{item.capacity}</td>
       <td className="hidden md:table-cell">{item.grade}</td>
+      <td className="hidden md:table-cell">{item.academicYear}</td>
       <td className="hidden md:table-cell">
         {item.teachers.find((t) => t.isPrimary)?.teacher?.user?.firstName ?? "N/A"}
       </td>
@@ -124,7 +127,7 @@ export default async function ClassListPage({
             <Image src="/sort.png" alt="sort" width={14} height={14} />
           </button>
 
-          {role === "admin" && <FormModal table="class" type="create" />}
+          {role === "admin" && <FormContainer table="class" type="create" />}
         </div>
       </div>
 

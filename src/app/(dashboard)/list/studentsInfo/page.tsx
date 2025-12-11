@@ -1,16 +1,14 @@
 import { HTMLAttributes } from "react";
-import FormModal from "@/components/FormModal";
 import Pagination from "@/components/Pagination";
 import TableSearch from "@/components/TableSearch";
-import { role } from "@/lib/data";
 import Image from "next/image";
-import Link from "next/link";
 import { Attendance, CourseEnrollment, Institute, Prisma, Student, StudentProgress, User } from "@prisma/client";
 import Table from "@/components/Table";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/settings";
-import FormContainer from "@/components/FormCotainer";
+import FormContainer from "@/components/FormContainer";
 import AppLink from "@/components/AppLink";
+import { auth } from "@clerk/nextjs/server";
 
 type StudentList = Student & {
   user: User
@@ -34,22 +32,15 @@ export default async function InstituteStudentListPage({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
 
-
-  // const [expanded, setExpanded] = useState<number | null>(null);
-
-  // const toggleExpand = (id: number) => {
-  //   setExpanded(expanded === id ? null : id);
-  // };
-
-  // const { sessionClaims } = await auth();
-  // const role = (sessionClaims?.metadata as { role?: string })?.role;
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
 
   const columns = [
     { header: "Student Info", accessor: "info" },
     { header: "ID", accessor: "studentId", className: "hidden sm:table-cell" },
     { header: "Enrollment Date", accessor: "enrollmentDate", className: "hidden lg:table-cell" },
     { header: "Institute", accessor: "institute", className: "hidden md:table-cell" },
-    { header: "Contact", accessor: "guardianPhone", className: "hidden lg:table-cell" },
+    { header: "Contact", accessor: "phoneNumber", className: "hidden lg:table-cell" },
     { header: "Actions", accessor: "actions" },
   ];
 
@@ -105,7 +96,7 @@ export default async function InstituteStudentListPage({
         <td className="hidden lg:table-cell text-gray-600">
           <div className="flex items-center gap-2">
             <IconSpan className="text-teal-500">📞</IconSpan>
-            <span className="text-sm">{item.guardianPhone || "N/A"}</span>
+            <span className="text-sm">{item.user?.phoneNumber || "N/A"}</span>
           </div>
         </td>
 
@@ -122,8 +113,11 @@ export default async function InstituteStudentListPage({
             </AppLink>
 
             {/* Delete Button (Admin only) */}
-            {role === "admin" && (
-              <FormModal table="student" type="delete" id={item.id} />
+            {(role === "admin" || role === "institute") && (
+              <div>
+              {/* <FormContainer table="student" type="update" data={item} /> */}
+              <FormContainer table="student" type="delete" id={item.id} />
+              </div>
             )}
 
             {/* Status Indicator (Quick Glance) */}
@@ -193,9 +187,9 @@ export default async function InstituteStudentListPage({
           </button>
 
           {/* Create Button (Admin only) */}
-          {role === "admin" &&
+          {/* {role === "admin" &&
             <FormContainer table="student" type="create" />
-          }
+          } */}
         </div>
       </div>
 

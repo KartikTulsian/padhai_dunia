@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Announcement, Class, Institute } from "@prisma/client";
 import { auth } from "@clerk/nextjs/server";
-import FormContainer from "./FormCotainer";
+import FormContainer from "./FormContainer";
 
 type AnnouncementWithRelations = Announcement & {
   class: Class | null;
